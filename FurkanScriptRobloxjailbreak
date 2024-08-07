@@ -1,0 +1,29 @@
+-- Max distance is 200 studs
+getgenv().toggled = true -- true & false
+
+getgenv().old = getgenv().old or require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollideWithIgnoreList
+
+if getgenv().toggled then
+    require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollideWithIgnoreList = function(...)
+        local nearestDistance, nearestEnemy = 600, nil
+        for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+            if v.Team ~= game:GetService("Players").LocalPlayer.Team and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local distance = (v.Character.HumanoidRootPart.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                if distance < nearestDistance then
+                    nearestDistance, nearestEnemy = distance, v
+                end
+            end
+        end
+        
+        local args = {getgenv().old(...)}
+        
+        if (tostring(getfenv(2).script) == "BulletEmitter" or tostring(getfenv(2).script) == "Taser") and nearestEnemy then
+            args[1] = nearestEnemy.Character.HumanoidRootPart
+            args[2] = nearestEnemy.Character.HumanoidRootPart.Position
+        end
+        
+        return unpack(args)
+    end
+else
+    require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollideWithIgnoreList = getgenv().old
+end
